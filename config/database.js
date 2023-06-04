@@ -1,8 +1,7 @@
 const mongoose = require("mongoose");
 mongoose.set("strictQuery", false);
-const { dbHost, dbName } = require("./config");
-// USE MONGODB LOCAL
-const mongoURI = `mongodb://${dbHost}/${dbName}`;
+const { dbPass, dbName, dbPort, dbUser, dbHost0, dbHost1, dbHost2, dbSsl } = require("./config");
+const mongoURI = `mongodb://${dbUser}:${dbPass}@${dbHost0}:${dbPort},${dbHost1}:${dbPort},${dbHost2}:${dbPort}/${dbName}?${dbSsl}`;
 mongoose.connect(mongoURI, {
     useNewUrlParser: true,
     useUnifiedTopology: true

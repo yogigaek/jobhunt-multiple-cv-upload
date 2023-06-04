@@ -2,7 +2,7 @@
 
 const validate = require('validate.js')
 const { MongoClient } = require('mongodb');
-const { dbName, dbHost } = require("../config/config");
+const { dbPass, dbName, dbPort, dbUser, dbHost0, dbHost1, dbHost2, dbSsl } = require("../config/config");
 const { postDataPegawai, putDataPegawai } = require('../services/dataPegawai.service');
 const DataPegawai = require('../model/dataPegawai.model');
 
@@ -84,11 +84,23 @@ const viewDataPegawai = async (req, res) => {
               },
             },
             {
+              $lookup: {
+                from: "bidangs",
+                localField: "Id_Bidang",
+                foreignField: "_id",
+                as: "bidang",
+              },
+            },
+            {
+              $unwind: "$bidang",
+            },
+            {
               $project: {
                 _id: 1,
                 Id_Pegawai: 1,
                 NamaLembaga: 1,
                 Id_Bidang: 1,
+                namaBidang: "$bidang.namaBidang",
                 DokumentasiSertifikat: 1,
                 Created_at: 1,
               },
@@ -122,7 +134,7 @@ const viewDataPegawai = async (req, res) => {
       },
     ];
     const client = new MongoClient(
-      `mongodb://${dbHost}/${dbName}`
+      `mongodb://${dbUser}:${dbPass}@${dbHost0}:${dbPort},${dbHost1}:${dbPort},${dbHost2}:${dbPort}/${dbName}?${dbSsl}`
     );
     const coll = client.db(dbName).collection("datapegawais");
     const aggCursor = coll.aggregate(query);
@@ -148,11 +160,23 @@ const viewDataPegawai = async (req, res) => {
               },
             },
             {
+              $lookup: {
+                from: "bidangs",
+                localField: "Id_Bidang",
+                foreignField: "_id",
+                as: "bidang",
+              },
+            },
+            {
+              $unwind: "$bidang",
+            },
+            {
               $project: {
                 _id: 1,
                 Id_Pegawai: 1,
                 NamaLembaga: 1,
                 Id_Bidang: 1,
+                namaBidang: "$bidang.namaBidang",
                 DokumentasiSertifikat: 1,
                 Created_at: 1,
               },
@@ -210,6 +234,16 @@ const updateDataPegawai = async (req, res) => {
   try {
     let payload = req.body;
     let { id } = req.params;
+
+    const constraints = {
+      TanggalLahir: { presence: true },
+    };
+
+    const validation = validate(payload, constraints);
+
+    if (validation) {
+      throw new Error(JSON.stringify(validation));
+    };
 
     const existingDataPegawai = await DataPegawai.findOne({ NamaLengkap: payload.NamaLengkap });
     if (existingDataPegawai) {
